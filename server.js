@@ -1,8 +1,8 @@
 const express = require('express');
 const fs = require('fs');
+const cors = require('cors'); // Importiere das CORS-Paket
 const app = express();
 const PORT = 3003;
-const cors = require('cors'); // Importiere das CORS-Paket
 
 app.use(cors()); // Aktiviere CORS für alle Routen
 app.use(express.json());
@@ -29,7 +29,10 @@ function saveData(file, data) {
 const accountsData = loadData(DATA_FILE, { users: {} });
 const cardsData = loadData(CARDS_FILE, {
     cards: [
-        { name: 'Pikachu', attack: 20, health: 100, rarity: 'common', packImage: '/images/pack_common.png' }
+        { name: 'Pikachu', attack: 20, health: 100, rarity: 'common', packImage: '/images/pack_common.png' },
+        { name: 'Charmander', attack: 25, health: 90, rarity: 'common', packImage: '/images/pack_common.png' },
+        { name: 'Bulbasaur', attack: 15, health: 110, rarity: 'common', packImage: '/images/pack_common.png' },
+        // Füge hier weitere Karten hinzu
     ]
 });
 
@@ -103,6 +106,28 @@ app.post('/sell-booster', (req, res) => {
     res.json({ message: 'Booster-Pack verkauft', user: data.users[username] });
 });
 
+// NEU: Karte verkaufen
+app.post('/sell-card', (req, res) => {
+    const { username, cardName } = req.body;
+    let data = loadData(DATA_FILE, { users: {} });
+    
+    if (!data.users[username]) {
+        return res.status(400).json({ message: 'Benutzer nicht gefunden' });
+    }
+    
+    const cardIndex = data.users[username].cards.findIndex(card => card.name === cardName);
+    
+    if (cardIndex === -1) {
+        return res.status(400).json({ message: 'Karte nicht gefunden' });
+    }
+    
+    const cardValue = 25; // Beispielwert für den Verkauf
+    data.users[username].cards.splice(cardIndex, 1);
+    data.users[username].pokeCoins += cardValue;
+    saveData(DATA_FILE, data);
+    res.json({ message: 'Karte verkauft', user: data.users[username] });
+});
+
 // Kartenbuch: Alle Karten anzeigen
 app.get('/cards/all', (req, res) => {
     let data = loadData(CARDS_FILE, { cards: [] });
@@ -119,6 +144,29 @@ app.get('/cards/:username', (req, res) => {
     res.json({ cards: data.users[username].cards });
 });
 
+// NEU: Kampf-Logik
+app.post('/battle', (req, res) => {
+    const { playerCard, aiCard } = req.body;
+
+    // Simuliere den Kampf
+    while (playerCard.health > 0 && aiCard.health > 0) {
+        const damageToAI = Math.floor(Math.random() * playerCard.attack);
+        aiCard.health -= damageToAI;
+
+        if (aiCard.health <= 0) {
+            return res.json({ winner: 'player', message: `${playerCard.name} hat gewonnen!` });
+        }
+
+        const damageToPlayer = Math.floor(Math.random() * aiCard.attack);
+        playerCard.health -= damageToPlayer;
+
+        if (playerCard.health <= 0) {
+            return res.json({ winner: 'ai', message: `${aiCard.name} hat gewonnen!` });
+        }
+    }
+});
+
+// Server starten
 app.listen(PORT, () => {
     console.log(`Server läuft auf Port ${PORT}`);
 });
