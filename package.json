@@ -13,7 +13,7 @@
     "url": "https://git.slimo.v6.rocks/pokecards-node"
   },
   "dependencies": {
-    "express": "^4.21.2",
+    "express": "^4.21.2"
   },
   "keywords": [],
   "author": "",
