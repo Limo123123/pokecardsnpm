@@ -2,8 +2,12 @@ const express = require('express');
 const fs = require('fs');
 const app = express();
 const PORT = 3003;
+const cors = require('cors'); // Importiere das CORS-Paket
 
 app.use(express.json());
+app.use(cors({
+    origin: ['https://git.slimo.v6.rocks', 'http://lock-signing.gl.at.ply.gg:5578']
+}));
 
 const DATA_FILE = 'accounts.json';
 const CARDS_FILE = 'cards.json';
