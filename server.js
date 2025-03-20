@@ -166,6 +166,21 @@ app.post('/battle', (req, res) => {
     }
 });
 
+// Endpoint zum Aktualisieren der PokeCoins
+app.post('/update-pokecoins', (req, res) => {
+    const { username, amount } = req.body;
+    let data = loadData(DATA_FILE, { users: {} });
+    
+    if (!data.users[username]) {
+        return res.status(400).json({ message: 'Benutzer nicht gefunden' });
+    }
+    
+    // Aktualisiere die PokeCoins
+    data.users[username].pokeCoins += amount;
+    saveData(DATA_FILE, data);
+    res.json({ message: 'PokeCoins aktualisiert', user: data.users[username] });
+});
+
 // Server starten
 app.listen(PORT, () => {
     console.log(`Server läuft auf Port ${PORT}`);
