@@ -1,0 +1,38 @@
+version: 38
+jobs:
+- name: Push Updates to Server
+  jobExecutor: Local-Pi5
+  steps:
+  - !CheckoutStep
+    name: Get Repo
+    cloneCredential: !DefaultCredential {}
+    withLfs: false
+    withSubmodules: false
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  - !CommandStep
+    name: NodeJS Builder
+    runInContainer: true
+    image: node:20
+    interpreter: !ShellInterpreter
+      shell: bash
+      commands: "wget http://ftp.de.debian.org/debian/pool/main/z/zip/zip_3.0-13_arm64.deb\n\ndpkg -i zip_3.0-13_arm64.deb \n\nnpm install\nnpm install cors\nnpm install express\nnpm run build\nls\nrm -rf .git\nzip -r latest.zip .\n"
+    useTTY: true
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  - !PublishSiteStep
+    name: Publish ZIP
+    artifacts: latest.zip
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  - !CommandStep
+    name: Send Webhook
+    runInContainer: true
+    image: node:20
+    interpreter: !ShellInterpreter
+      shell: bash
+      commands: |
+        curl -X POST http://@secret:IP PI4@:4000/deploypoke
+    useTTY: true
+    condition: ALL_PREVIOUS_STEPS_WERE_SUCCESSFUL
+  retryCondition: never
+  maxRetries: 3
+  retryDelay: 30
+  timeout: 14400
