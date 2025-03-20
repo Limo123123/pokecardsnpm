@@ -1,7 +1,6 @@
 version: 38
 jobs:
 - name: Push Updates to Server
-  jobExecutor: Local-Pi5
   steps:
   - !CheckoutStep
     name: Get Repo
